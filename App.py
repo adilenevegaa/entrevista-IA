@@ -70,7 +70,7 @@ if "chat_session" not in st.session_state or st.session_state.get("current_role"
     st.session_state.current_role = rol_seleccionado
     try:
         st.session_state.chat_session = st.session_state.client.chats.create(
-            model="gemini-2.5-flash",  # Cambiado aquí al modelo correcto y funcional
+            model="gemini-3.8-flash",  # Cambiado aquí al modelo correcto y funcional
             config=CONFIG_INSTRUCCIONES
         )
         initial_prompt = f"Inicia la entrevista técnica para la vacante de {rol_seleccionado}. Saluda al candidato y haz la primera pregunta técnica."
