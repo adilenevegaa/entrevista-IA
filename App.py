@@ -92,10 +92,11 @@ if "messages" in st.session_state:
             st.markdown(message["content"])
 
 # ==============================================================================
-# 6. ENTRADA Y LÓGICA DE TURNOS (SIN ERRORES DE DOM)
+# 6. ENTRADA Y LÓGICA DE TURNOS
 # ==============================================================================
 if not st.session_state.entrevista_finalizada:
-    if user_input := st.chat_input("Escribe tu respuesta técnica..."):
+    user_input = st.chat_input("Escribe tu respuesta técnica...")
+    if user_input:
         st.session_state.messages.append({"role": "user", "content": user_input})
         with st.chat_message("user"):
             st.markdown(user_input)
@@ -123,7 +124,13 @@ if not st.session_state.entrevista_finalizada:
                         st.markdown(response.text)
                         st.session_state.messages.append({"role": "assistant", "content": response.text})
                         st.session_state.entrevista_finalizada = True
+                        # Forzamos un rerun limpio para que se dibuje el estado final correctamente
+                        st.rerun()
                 except Exception as e:
                     st.error(f"Error al procesar mensaje: {e}")
 else:
-    st.info("🏁 La entrevista ha finalizado. Puedes revisar el reporte arriba o presionar 'Reiniciar Entrevista' en la barra lateral.")
+    st.success("🏁 ¡Entrevista finalizada con éxito! Revisa el reporte detallado del asistente en el chat de arriba.")
+    if st.button("🔄 Comenzar Nueva Entrevista"):
+        for key in list(st.session_state.keys()):
+            del st.session_state[key]
+        st.rerun()
