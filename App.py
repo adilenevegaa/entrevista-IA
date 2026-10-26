@@ -44,10 +44,11 @@ if "turn_count" not in st.session_state:
 if "interview_active" not in st.session_state:
     st.session_state.interview_active = True
 
-# Configurar el cliente y la sesión de chat de manera segura
+# Inicializar cliente y chat persistente en session_state para que NUNCA se cierre
 if "chat_session" not in st.session_state:
     try:
-        client = genai.Client()
+        st.session_state.client = genai.Client()
+        
         system_instruction = f"""
         Eres un entrevistador técnico profesional, exigente pero justo, que evalúa a candidatos para el puesto de: {rol_seleccionado}.
         Tu objetivo es realizar una entrevista técnica adaptativa de EXACTAMENTE 3 preguntas, una por una.
@@ -59,7 +60,7 @@ if "chat_session" not in st.session_state:
         4. No felicites excesivamente; mantén un tono de evaluador técnico real.
         """
         
-        st.session_state.chat_session = client.chats.create(
+        st.session_state.chat_session = st.session_state.client.chats.create(
             model="gemini-2.5-flash",
             config={
                 "system_instruction": system_instruction,
