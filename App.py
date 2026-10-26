@@ -62,8 +62,8 @@ if "chat_session" not in st.session_state:
         4. No felicites excesivamente; mantén un tono de evaluador técnico real.
         """
         
-        st.session_state.chat_session = client.chats.create(
-            model="gemini-3.8-flash",
+       st.session_state.chat_session = client.chats.create(
+            model="gemini-2.5-flash",  # <--- Cambiamos a este modelo más estable
             config={
                 "system_instruction": system_instruction,
                 "temperature": 0.7,
