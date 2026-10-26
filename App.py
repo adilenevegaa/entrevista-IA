@@ -28,7 +28,7 @@ with st.sidebar:
     
     st.markdown("---")
     
-    # Botón para reiniciar la entrevista (Requerimiento A y Caso de Prueba 3)
+    # Botón para reiniciar la entrevista
     if st.button("🔄 Reiniciar Entrevista", use_container_width=True):
         st.session_state.clear()
         st.rerun()
@@ -36,7 +36,7 @@ with st.sidebar:
     st.markdown("---")
     st.info("💡 **Reglas:** La entrevista consta exactamente de **3 preguntas técnicas adaptativas**. Al finalizar, obtendrás tu dictamen de contratación.")
 
-# Inicialización de el estado de la sesión (Requerimiento B)
+# Inicialización del estado de la sesión
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
@@ -47,12 +47,9 @@ if "interview_active" not in st.session_state:
     st.session_state.interview_active = True
 
 if "chat_session" not in st.session_state:
-    # Configuración de la API de Gemini utilizando la SDK oficial google-genai
-    # Nota: Asegúrate de tener configurada tu GEMINI_API_KEY en las variables de entorno o Streamlit Secrets.
     try:
         client = genai.Client()
         
-        # System Instructions estrictas con protección anti-jailbreak (Requerimiento C)
         system_instruction = f"""
         Eres un entrevistador técnico profesional, exigente pero justo, que evalúa a candidatos para el puesto de: {rol_seleccionado}.
         Tu objetivo es realizar una entrevista técnica adaptativa de EXACTAMENTE 3 preguntas, una por una.
@@ -64,9 +61,8 @@ if "chat_session" not in st.session_state:
         4. No felicites excesivamente; mantén un tono de evaluador técnico real.
         """
         
-        # Inicializamos el chat con gemini-2.5-flash (o gemini-3.8-flash según prefieras)
         st.session_state.chat_session = client.chats.create(
-            model="gemini-3.8-flash",  # <--- Nuevo modelo recomendado
+            model="gemini-3.8-flash",
             config={
                 "system_instruction": system_instruction,
                 "temperature": 0.7,
@@ -78,8 +74,11 @@ if "chat_session" not in st.session_state:
         response = st.session_state.chat_session.send_message(initial_prompt)
         st.session_state.messages.append({"role": "assistant", "content": response.text})
         
+        # Forzar recarga para que aparezca inmediatamente el mensaje y el input
+        st.rerun()
+        
     except Exception as e:
-        st.error(f"Error al inicializar el cliente de Gemini. Asegúrate de configurar tu API Key. Detalle: {e}")
+        st.error(f"Error al inicializar el cliente de Gemini. Asegúrate de configurar tu API Key en los Secrets. Detalle: {e}")
         st.stop()
 
 # Mostrar el historial de mensajes en la interfaz
@@ -87,26 +86,21 @@ for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-# Lógica del Chat y Control de Turnos (Requerimiento B y Caso de Prueba 2)
+# Lógica del Chat y Control de Turnos
 if st.session_state.interview_active:
-    # Si aún no llegamos a 3 respuestas del usuario, permitimos la entrada
     if prompt := st.chat_input("Escribe tu respuesta técnica aquí..."):
-        # Añadir mensaje del usuario al historial
         st.session_state.messages.append({"role": "user", "content": prompt})
         with st.chat_message("user"):
             st.markdown(prompt)
             
-        # Incrementar contador de turnos del usuario
         st.session_state.turn_count += 1
         
-        # Verificar si ya completó las 3 preguntas
         if st.session_state.turn_count >= 3:
             st.session_state.interview_active = False
             
             with st.chat_message("assistant"):
                 with st.spinner("Generando reporte final de contratación..."):
                     try:
-                        # Petición para generar el reporte estructurado (Requerimiento D)
                         evaluation_prompt = """
                         La entrevista ha concluido (se han respondido las 3 preguntas). 
                         Ahora debes emitir un dictamen final de contratación en formato Markdown estructurado exactamente con los siguientes apartados:
@@ -126,7 +120,6 @@ if st.session_state.interview_active:
                         st.session_state.messages.append({"role": "assistant", "content": error_msg})
             st.rerun()
         else:
-            # Continuar con la siguiente pregunta adaptativa
             with st.chat_message("assistant"):
                 with st.spinner("Analizando respuesta y formulando siguiente pregunta..."):
                     try:
@@ -134,6 +127,7 @@ if st.session_state.interview_active:
                         bot_reply = response.text
                         st.markdown(bot_reply)
                         st.session_state.messages.append({"role": "assistant", "content": bot_reply})
+                        st.rerun()
                     except Exception as e:
                         st.error(f"Error al comunicarse con Gemini: {e}")
 else:
