@@ -44,7 +44,7 @@ if "turn_count" not in st.session_state:
 if "interview_active" not in st.session_state:
     st.session_state.interview_active = True
 
-# Inicializar cliente y chat persistente en session_state para que NUNCA se cierre
+# Inicializar cliente y chat persistente en session_state
 if "chat_session" not in st.session_state:
     try:
         st.session_state.client = genai.Client()
@@ -61,7 +61,7 @@ if "chat_session" not in st.session_state:
         """
         
         st.session_state.chat_session = st.session_state.client.chats.create(
-            model="gemini-2.5-flash",
+            model="gemini-3.8-flash",
             config={
                 "system_instruction": system_instruction,
                 "temperature": 0.7,
