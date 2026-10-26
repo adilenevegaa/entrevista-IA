@@ -46,6 +46,7 @@ if "turn_count" not in st.session_state:
 if "interview_active" not in st.session_state:
     st.session_state.interview_active = True
 
+# Inicializar el cliente y la sesión de chat una sola vez en st.session_state
 if "chat_session" not in st.session_state:
     try:
         client = genai.Client()
@@ -74,14 +75,11 @@ if "chat_session" not in st.session_state:
         response = st.session_state.chat_session.send_message(initial_prompt)
         st.session_state.messages.append({"role": "assistant", "content": response.text})
         
-        # Forzar recarga para que aparezca inmediatamente el mensaje y el input
-        st.rerun()
-        
     except Exception as e:
         st.error(f"Error al inicializar el cliente de Gemini. Asegúrate de configurar tu API Key en los Secrets. Detalle: {e}")
         st.stop()
 
-# Mostrar el historial de mensajes en la interfaz
+# Mostrar todo el historial de mensajes acumulados en la interfaz
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
@@ -89,6 +87,7 @@ for message in st.session_state.messages:
 # Lógica del Chat y Control de Turnos
 if st.session_state.interview_active:
     if prompt := st.chat_input("Escribe tu respuesta técnica aquí..."):
+        # Añadir y mostrar inmediatamente la respuesta del usuario
         st.session_state.messages.append({"role": "user", "content": prompt})
         with st.chat_message("user"):
             st.markdown(prompt)
@@ -118,7 +117,6 @@ if st.session_state.interview_active:
                         error_msg = f"Error al generar el reporte final: {e}"
                         st.error(error_msg)
                         st.session_state.messages.append({"role": "assistant", "content": error_msg})
-            st.rerun()
         else:
             with st.chat_message("assistant"):
                 with st.spinner("Analizando respuesta y formulando siguiente pregunta..."):
@@ -127,7 +125,6 @@ if st.session_state.interview_active:
                         bot_reply = response.text
                         st.markdown(bot_reply)
                         st.session_state.messages.append({"role": "assistant", "content": bot_reply})
-                        st.rerun()
                     except Exception as e:
                         st.error(f"Error al comunicarse con Gemini: {e}")
 else:
